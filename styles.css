@@ -348,6 +348,37 @@ select.ctrl{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmln
 .lvl-total{margin-top:13px;font-size:13.5px;color:var(--ink-soft)}
 .lvl-total b{color:var(--blue-700);font-size:15px}
 
+/* ===== V2: danh sách bài ===== */
+.v2-tag{font-size:13px;font-weight:800;color:#fff;background:linear-gradient(120deg,#3b82f6,#6d5cf6);padding:3px 10px;border-radius:8px;vertical-align:middle;margin-left:8px;letter-spacing:.5px}
+.bai-rowname{font-weight:700;font-size:14px}
+.lr-pick.bai{display:grid;grid-template-columns:96px 138px auto;align-items:center;justify-items:start;gap:10px}
+.lr-pick.bai .lvl-badge{margin-top:0;align-self:center}
+.map-note{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#f7f9fc;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:var(--ink-soft)}
+.map-note > svg{color:var(--blue-600);flex:none}
+.map-pair{display:inline-flex;align-items:center;gap:6px}
+.map-pair svg{color:var(--muted-2)}
+.map-pair b{font-weight:700}
+.bai-mixtag{font-size:12px;color:var(--muted);font-weight:600;background:#f1f4f8;border-radius:20px;padding:3px 11px}
+.bai-breakdown{color:var(--muted);font-weight:500}
+.bai-list{display:flex;flex-direction:column;gap:10px}
+.bai-item{border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#fff;transition:.15s}
+.bai-item.open{border-color:#c7d7f2;box-shadow:0 6px 18px rgba(20,40,80,.07)}
+.bai-head{display:flex;align-items:center;gap:12px;width:100%;border:none;background:#fff;padding:13px 15px;text-align:left;cursor:pointer}
+.bai-item.open .bai-head{background:#fbfcff;border-bottom:1px solid var(--line)}
+.bai-head:hover{background:#f7f9fc}
+.bai-item.open .bai-head:hover{background:#fbfcff}
+.bai-idx{width:28px;height:28px;border-radius:8px;color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;flex:none}
+.bai-head-main{flex:1;min-width:0}
+.bai-name{font-weight:700;font-size:14.5px;display:block}
+.bai-sub{font-size:12.5px;color:var(--muted);font-weight:500}
+.bai-head .lvl-badge{flex:none}
+.bai-head .acc-caret{color:var(--muted);transition:transform .2s;flex:none}
+.bai-item.open .acc-caret{transform:rotate(180deg)}
+.bai-body{padding:16px 18px;animation:accIn .2s ease}
+.bai-mixline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mix-chip{font-size:12px;font-weight:700;padding:3px 11px;border-radius:20px}
+.q-card .q-kind{font-size:11px;font-weight:700;color:var(--blue-700);background:var(--blue-50);border-radius:6px;padding:3px 9px;flex:none}
+
 /* document / passage */
 .ver-wrap{margin:0 0 14px}
 .ver-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}

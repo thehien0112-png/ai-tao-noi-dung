@@ -38,8 +38,10 @@ const ROSTER = {
 const GRP_ORDER = ['yeu','kha','gioi'];
 window.INTERESTS = INTERESTS; window.ROSTER = ROSTER; window.CLASSES = CLASSES;
 
-function AssignModal({groupQ, groupMix, totalAssigned, title, onClose, onDone}){
+function AssignModal({groupQ, groupMix, groupBai, totalAssigned, title, onClose, onDone}){
   const GROUP_BY_ID = window.GROUP_BY_ID;
+  const byBai = !!groupBai;
+  const totalBai = byBai ? GRP_ORDER.reduce((a,g)=>a+(groupBai[g]||0),0) : 0;
   const qTotal = GRP_ORDER.reduce((a,g)=>a+(groupQ[g]||0),0)+(groupQ.lop||0);
   const mixStr = g => {
     const m = groupMix && groupMix[g]; if(!m) return '';
@@ -68,7 +70,7 @@ function AssignModal({groupQ, groupMix, totalAssigned, title, onClose, onDone}){
         <div className="done-hero" style={{padding:'40px 24px'}}>
           <div className="ring"><Icon name="check" size={40} stroke={3}/></div>
           <h3>Đã giao bài thành công!</h3>
-          <p>Đã giao {qTotal>0?<><b>{totalAssigned} câu hỏi</b></>:<><b>bài học{title?` “${title}”`:''}</b></>} cho <b>{pickedCount} học sinh</b> {clsName}.<br/>
+          <p>Đã giao {byBai?<><b>{totalBai} bài</b></>:qTotal>0?<><b>{totalAssigned} câu hỏi</b></>:<><b>bài học{title?` “${title}”`:''}</b></>} cho <b>{pickedCount} học sinh</b> {clsName}.<br/>
             Hạn nộp: <b>{time} ngày {date.split('-').reverse().join('/')}</b>.</p>
           <button className="btn btn-primary btn-lg" style={{marginTop:18}} onClick={onClose}>
             <Icon name="check" size={16} stroke={3}/>Hoàn tất
@@ -87,6 +89,7 @@ function AssignModal({groupQ, groupMix, totalAssigned, title, onClose, onDone}){
         </div>
         <div className="assign-body">
           {/* tóm tắt câu hỏi theo nhóm */}
+          {!byBai && (
           <div className="as-summary">
             {qTotal>0 ? (<>
               <div className="as-sum-label">Mỗi nhóm nhận một đề riêng — chủ yếu câu đúng trình độ, thêm vài câu khó hơn một bậc:</div>
@@ -103,6 +106,7 @@ function AssignModal({groupQ, groupMix, totalAssigned, title, onClose, onDone}){
               </div>
             )}
           </div>
+          )}
 
           {/* chọn lớp */}
           <div className="as-field">
@@ -133,7 +137,7 @@ function AssignModal({groupQ, groupMix, totalAssigned, title, onClose, onDone}){
                       <Check on={onCnt===studs.length} indet={onCnt>0&&onCnt<studs.length}/>
                       <span className="ac-dot" style={{background:gi.color}}></span>
                       <span className="gc-name">{gi.name}</span>
-                      <span className="gc-q" style={{color:gi.color,background:gi.bg}}>nhận {groupQ[g]||0} câu{mixStr(g)?` · ${mixStr(g)}`:''}</span>
+                      <span className="gc-q" style={{color:gi.color,background:gi.bg}}>{byBai ? <>nhận {groupBai[g]||0} bài</> : <>nhận {groupQ[g]||0} câu{mixStr(g)?` · ${mixStr(g)}`:''}</>}</span>
                     </div>
                     <div className="gc-students">
                       {studs.map(s=>(
@@ -168,7 +172,7 @@ function AssignModal({groupQ, groupMix, totalAssigned, title, onClose, onDone}){
         <div className="wz-foot">
           <button className="btn" onClick={onClose}>Huỷ</button>
           <div style={{display:'flex',alignItems:'center',gap:14}}>
-            <span className="foot-info">Giao {qTotal>0?<><b>{totalAssigned}</b> câu</>:<>bài học</>} cho <b>{pickedCount}</b> HS {clsName}</span>
+            <span className="foot-info">Giao {byBai?<><b>{totalBai}</b> bài</> : qTotal>0?<><b>{totalAssigned}</b> câu</>:<>bài học</>} cho <b>{pickedCount}</b> HS {clsName}</span>
             <button className="btn btn-primary btn-lg" disabled={pickedCount===0} onClick={()=>setDone(true)}>
               <Icon name="send" size={16}/>Giao bài
             </button>

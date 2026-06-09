@@ -4,6 +4,7 @@ const { useMemo, useEffect } = React;
 const RTYPES = [
   { id:'baidoc',  name:'Bài đọc',  dur:'10–30s', icon:'reader',     color:'#2563eb' },
   { id:'sachnoi', name:'Sách nói', dur:'2–3 phút',icon:'headphones', color:'#7c3aed' },
+  { id:'video',   name:'Video', dur:'1–2 phút',  icon:'video',      color:'#ea580c' },
   { id:'baitap',  name:'Bài tập luyện tập', dur:'', icon:'puzzle',   color:'#16a34a' },
 ];
 
@@ -49,6 +50,7 @@ const summaryDesc = {
   setup:'Nội dung, mức độ và tuỳ chọn tạo bài',
   baidoc:'Bài đọc do AI tạo, có thể chỉnh sửa',
   sachnoi:'Bản thu âm thanh đọc bài',
+  video:'Video bài giảng do AI tạo',
   baitap:'Câu hỏi luyện tập tự sinh',
 };
 
@@ -128,9 +130,9 @@ function HistoryModal({onClose}){
 }
 
 function App(){
-  const [types, setTypes] = useState(new Set(['baidoc','sachnoi','baitap']));
+  const [types, setTypes] = useState(new Set(['baidoc','sachnoi','video','baitap']));
   const [content, setContent] = useState('Bài đọc "Tôi là học sinh lớp 2" — kể về cảm xúc của bạn nhỏ trong ngày tựu trường đầu tiên của lớp 2.');
-  const [cfg, setCfg] = useState({ grade:'Lớp 2', subject:'Tiếng Việt', voice:'Nova (Nữ trẻ)' });
+  const [cfg, setCfg] = useState({ grade:'Lớp 2', subject:'Tiếng Việt', voice:'Nova (Nữ trẻ)', vstyle:'Hoạt hình minh hoạ' });
   const [levels, setLevels] = useState({
     'Dễ':         { on:true,  n:3 },
     'Trung bình': { on:true,  n:2 },
@@ -140,10 +142,12 @@ function App(){
   const [open, setOpen] = useState('setup');
   const [status, setStatus] = useState({});        // per-type: generating | done | cancelled
   const [audioPct, setAudioPct] = useState(0);
+  const [videoPct, setVideoPct] = useState(0);
   const [showHist, setShowHist] = useState(false);
   const [toast, setToast] = useState(null);
   const [files, setFiles] = useState([]);
   const audioTimer = React.useRef(null);
+  const videoTimer = React.useRef(null);
   const addFiles = list => setFiles(f=>[...f, ...[...list].map(x=>({name:x.name, isImg:(x.type||'').startsWith('image/')}))]);
 
   const toggleType = id => setTypes(s=>{const n=new Set(s);n.has(id)?n.delete(id):n.add(id);return n;});
@@ -172,6 +176,21 @@ function App(){
       });
     }, 520);
   };
+  const runVideo = ()=>{
+    setStatus(s=>({...s, video:'generating'})); setVideoPct(0);
+    clearInterval(videoTimer.current);
+    videoTimer.current = setInterval(()=>{
+      setVideoPct(p=>{
+        const np = Math.min(100, p + Math.round(2+Math.random()*5));
+        if(np>=100){
+          clearInterval(videoTimer.current);
+          setStatus(s=>({...s, video:'done'}));
+          setToast('🎬 Video bài giảng đã tạo xong'); setTimeout(()=>setToast(null),2800);
+        }
+        return np;
+      });
+    }, 560);
+  };
   const generate = ()=>{
     const init={}; orderedResults.forEach(t=>init[t.id]='generating');
     setStatus(init); setPhase('ready');
@@ -179,8 +198,10 @@ function App(){
     if(types.has('baidoc')) setTimeout(()=>setStatus(s=>({...s, baidoc:'done'})), 1500);
     if(types.has('baitap')) setTimeout(()=>setStatus(s=>({...s, baitap:'done'})), 2300);
     if(types.has('sachnoi')) runAudio();
+    if(types.has('video')) runVideo();
   };
   const cancelAudio = ()=>{ clearInterval(audioTimer.current); setStatus(s=>({...s, sachnoi:'cancelled'})); };
+  const cancelVideo = ()=>{ clearInterval(videoTimer.current); setStatus(s=>({...s, video:'cancelled'})); };
   const saveAll = ()=>{ setToast('Đã lưu tất cả bài giảng'); setTimeout(()=>setToast(null),2400); };
 
   // header summaries
@@ -189,9 +210,11 @@ function App(){
   const resSummary = {
     baidoc:`Đã tạo · ~${LESSON.words} từ`,
     sachnoi:`Đã tạo · ${LESSON.duration} · giọng ${cfg.voice.split(' (')[0]}`,
+    video:`Đã tạo · 1:48 · ${cfg.vstyle}`,
     baitap:`${totalQ} câu hỏi · ${activeLevels.length>1?activeLevels.length+' mức độ':'mức '+(activeLevels[0]||'—')}`,
   };
   const audioBusy = status.sachnoi==='generating';
+  const videoBusy = status.video==='generating';
 
   return (
     <div className="app">
@@ -289,19 +312,30 @@ function App(){
 
           {phase==='ready' && orderedResults.map((t,i)=>{
             const st = status[t.id] || 'generating';
+            const pct = t.id==='sachnoi'?audioPct : t.id==='video'?videoPct : null;
             const sum = st==='done' ? resSummary[t.id]
               : st==='cancelled' ? 'Đã huỷ — chưa tạo'
-              : (t.id==='sachnoi' ? `Đang tạo · ${audioPct}%` : 'Đang tạo…');
+              : (pct!=null ? `Đang tạo · ${pct}%` : 'Đang tạo…');
+            const body = ()=>{
+              if(st==='done'){
+                if(t.id==='baidoc') return <ReadingBody/>;
+                if(t.id==='sachnoi') return <AudioBody/>;
+                if(t.id==='video') return <VideoBody style={cfg.vstyle}/>;
+                return <ExerciseBody levels={levels}/>;
+              }
+              if(st==='cancelled'){
+                if(t.id==='video') return <VideoCancelled onRetry={runVideo}/>;
+                if(t.id==='sachnoi') return <AudioCancelled onRetry={runAudio}/>;
+                return <AudioCancelled onRetry={()=>setStatus(s=>({...s,[t.id]:'done'}))}/>;
+              }
+              if(t.id==='sachnoi') return <AudioGenerating pct={audioPct} voice={cfg.voice} onCancel={cancelAudio}/>;
+              if(t.id==='video') return <VideoGenerating pct={videoPct} vstyle={cfg.vstyle} onCancel={cancelVideo}/>;
+              return <Skeleton kind={t.id}/>;
+            };
             return (
               <Sec key={t.id} id={t.id} index={i+2} title={t.name} open={open===t.id}
                    status={st} summary={sum} onHeader={toggleOpen}>
-                {st==='done'
-                  ? (t.id==='baidoc' ? <ReadingBody/> : t.id==='sachnoi' ? <AudioBody/> : <ExerciseBody levels={levels}/>)
-                  : st==='cancelled'
-                    ? <AudioCancelled onRetry={runAudio}/>
-                    : (t.id==='sachnoi'
-                        ? <AudioGenerating pct={audioPct} voice={cfg.voice} onCancel={cancelAudio}/>
-                        : <Skeleton kind={t.id}/>)}
+                {body()}
               </Sec>
             );
           })}
@@ -310,14 +344,14 @@ function App(){
         {phase==='ready' && (
           <div className="save-bar">
             <span className="save-info">
-              {audioBusy
-                ? <>Đang tạo sách nói… <b>{audioPct}%</b> — các phần khác đã sẵn sàng để lưu</>
+              {(audioBusy||videoBusy)
+                ? <>Đang tạo {audioBusy&&videoBusy?'sách nói & video':audioBusy?'sách nói':'video'}… — các phần khác đã sẵn sàng để lưu</>
                 : <>Đã tạo <b>{orderedResults.length}</b> loại bài giảng cho bài <b>“{LESSON.title}”</b></>}
             </span>
             <div style={{display:'flex',gap:10}}>
               <a className="btn" href="Thư viện.html"><Icon name="folder" size={15}/>Thư viện</a>
               <button className="btn btn-primary btn-lg" onClick={saveAll}>
-                <Icon name="save" size={16}/>{audioBusy?'Lưu phần đã xong':'Lưu tất cả'}
+                <Icon name="save" size={16}/>{(audioBusy||videoBusy)?'Lưu phần đã xong':'Lưu tất cả'}
               </button>
             </div>
           </div>

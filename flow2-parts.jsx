@@ -204,4 +204,101 @@ function AudioBody(){
   );
 }
 
-Object.assign(window, { LESSON, ReadingBody, AudioBody, VersionBar });
+// ===== Video bài giảng (AI) =====
+const VSTYLES = ['Hoạt hình minh hoạ', 'Giáo viên ảo (AI avatar)', 'Slide thuyết minh'];
+const VDURATIONS = ['1:48', '2:05', '1:32', '2:20'];
+const VSCENES = [
+  { t:'0:00', label:'Mở đầu — Giới thiệu bài học' },
+  { t:'0:18', label:'Cảnh 1 — Buổi sáng tựu trường' },
+  { t:'0:46', label:'Cảnh 2 — Trên đường tới trường' },
+  { t:'1:14', label:'Cảnh 3 — Niềm tự hào của bạn nhỏ' },
+  { t:'1:36', label:'Tổng kết — Bài học rút ra' },
+];
+
+function VideoBody({style:vstyle}){
+  const [versions, setVersions] = useState([{ n:1, time:nowStr(), vstyle:vstyle||'Hoạt hình minh hoạ', duration:VDURATIONS[0] }]);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const cur = versions[activeIdx];
+
+  const pick = i => { setActiveIdx(i); setPlaying(false); };
+  const regen = ()=>{
+    const vstyle2 = VSTYLES[versions.length % VSTYLES.length];
+    const duration = VDURATIONS[versions.length % VDURATIONS.length];
+    setVersions(vs => [{ n: vs[0].n+1, time: nowStr(), vstyle:vstyle2, duration }, ...vs]);
+    setActiveIdx(0); setPlaying(false);
+  };
+
+  return (
+    <div>
+      <p className="sec-sub">Video bài giảng do AI dựng tự động từ nội dung bài, phong cách <b>{cur.vstyle}</b>. Mỗi lần tạo lại được lưu thành phiên bản riêng.</p>
+      <VersionBar versions={versions} activeIdx={activeIdx} onPick={pick} kind="restore"
+        renderPreview={v=>`${v.vstyle} · ${v.duration}`}/>
+      <div className="video-frame">
+        <div className="vf-stage">
+          <div className="vf-scene">
+            <span className="vf-badge"><Icon name="sparkles" size={12} fill/>AI · {cur.vstyle}</span>
+            <div className="vf-art">
+              <span className="vf-sun"></span>
+              <span className="vf-hill"></span><span className="vf-hill h2"></span>
+              <span className="vf-char"></span>
+              <span className="vf-cap">“{LESSON.title}”</span>
+            </div>
+          </div>
+          <button className="vf-play" onClick={()=>setPlaying(p=>!p)}><Icon name={playing?'pause':'play'} size={26} fill/></button>
+        </div>
+        <div className="vf-bar">
+          <button className="vf-mini" onClick={()=>setPlaying(p=>!p)}><Icon name={playing?'pause':'play'} size={15} fill/></button>
+          <div className="vf-track"><i style={{width:playing?'38%':'0%'}}></i></div>
+          <span className="vf-time">{playing?'0:41':'0:00'} / {cur.duration}</span>
+          <button className="vf-mini"><Icon name="volume" size={15}/></button>
+        </div>
+      </div>
+      <div className="acc-actions">
+        <div style={{display:'flex',gap:10}}>
+          <button className="btn" onClick={regen}><Icon name="refresh" size={15}/>Đổi giọng / Tạo lại</button>
+          <button className="btn"><Icon name="download" size={15}/>Tải MP4</button>
+        </div>
+        <button className="btn btn-primary"><Icon name="save" size={15}/>Lưu video</button>
+      </div>
+    </div>
+  );
+}
+function VideoGenerating({pct, vstyle, onCancel}){
+  const eta = Math.max(1, Math.ceil((100-pct)/100*40));
+  return (
+    <div>
+      <p className="sec-sub">Dựng video cần nhiều thời gian nhất (ghép cảnh, lồng tiếng, kết xuất). Bạn cứ xem và chỉnh các phần đã xong — khối này sẽ tự cập nhật khi hoàn tất.</p>
+      <div className="audio-gen vid-gen">
+        <div className="ag-top">
+          <div className="ag-ring"><div className="ag-spin vid"></div></div>
+          <div className="ag-meta">
+            <div className="ag-title">Đang dựng video bài giảng…</div>
+            <div className="ag-sub">{vstyle} · còn khoảng {eta} giây</div>
+          </div>
+          <div className="ag-pct vid-pct">{pct}%</div>
+        </div>
+        <div className="ag-bar"><i className="vid-i" style={{width:pct+'%'}}></i></div>
+        <div className="vg-steps">
+          {['Phân cảnh','Tạo hình ảnh','Lồng tiếng','Kết xuất'].map((s,i)=>{
+            const done = pct > (i+1)*25; const run = !done && pct > i*25;
+            return <span className={'vg-step'+(done?' done':'')+(run?' run':'')} key={i}>
+              {done?<Icon name="check" size={12} stroke={3}/>:run?<span className="spin" style={{width:11,height:11,borderWidth:2}}/>:<span className="vg-dot"/>}{s}</span>;
+          })}
+        </div>
+        <div className="ag-note"><Icon name="info" size={15}/>Bạn không cần chờ ở đây — khi xong sẽ có thông báo và trình phát hiện ra ngay tại khối này.</div>
+        <div className="ag-actions"><button className="btn" onClick={onCancel}><Icon name="x" size={14}/>Huỷ tạo</button></div>
+      </div>
+    </div>
+  );
+}
+function VideoCancelled({onRetry}){
+  return (
+    <div>
+      <p className="sec-sub">Đã huỷ dựng video. Các phần khác không bị ảnh hưởng — bạn có thể tạo lại bất cứ lúc nào.</p>
+      <button className="btn btn-primary" onClick={onRetry}><Icon name="refresh" size={15}/>Tạo lại video</button>
+    </div>
+  );
+}
+
+Object.assign(window, { LESSON, ReadingBody, AudioBody, VersionBar, VideoBody, VideoGenerating, VideoCancelled });

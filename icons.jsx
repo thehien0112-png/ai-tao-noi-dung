@@ -45,6 +45,7 @@ const ICONS = {
   send:'M22 2L11 13 M22 2l-7 20-4-9-9-4z',
   calendar:'M8 2v4 M16 2v4 M3 10h18 M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z',
   clock2:'M12 22a10 10 0 100-20 10 10 0 000 20z M12 6v6l4 2',
+  heart:'M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 00-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 000-7.8z',
 };
 function Icon({name, size=20, stroke=2, fill=false, style, ...rest}){
   const d = ICONS[name] || '';

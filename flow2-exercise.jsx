@@ -43,8 +43,28 @@ function ExerciseBody({levels}){
   const [tab, setTab] = React.useState('all');
   const [lvlF, setLvlF] = React.useState('all');
   const [inc, setInc] = React.useState(new Set(items.filter(q=>q.inc).map(q=>q.id)));
-  const [assign, setAssign] = React.useState({});   // qId -> groupId
   const [showAssign, setShowAssign] = React.useState(false);
+
+  const LV = ['Dễ','Trung bình','Khó'];
+  const avail = {}; LV.forEach(l=>avail[l]=items.filter(q=>q.level===l).length);
+  const CORE    = { yeu:'Dễ',          kha:'Trung bình', gioi:'Khó' };
+  const STRETCH = { yeu:'Trung bình',  kha:'Khó',        gioi:null  };
+  const makeDefault = ()=>({
+    yeu:  {'Dễ':avail['Dễ'],           'Trung bình':Math.min(1,avail['Trung bình']), 'Khó':0},
+    kha:  {'Dễ':0, 'Trung bình':avail['Trung bình'], 'Khó':Math.min(1,avail['Khó'])},
+    gioi: {'Dễ':0, 'Trung bình':Math.min(1,avail['Trung bình']),  'Khó':avail['Khó']},
+  });
+  const [recipe, setRecipe] = React.useState(makeDefault);
+  const [openG, setOpenG] = React.useState({});
+  const G3 = GROUPS.filter(g=>g.id!=='lop');
+
+  const setRq = (gid,lv,v)=> setRecipe(r=>({...r,[gid]:{...r[gid],[lv]:v}}));
+  const basketFor = gid => { const r=recipe[gid]||{}; const out=[]; LV.forEach(l=>{ out.push(...items.filter(q=>q.level===l).slice(0,r[l]||0)); }); return out; };
+  const totalFor = gid => LV.reduce((a,l)=>a+(recipe[gid]?.[l]||0),0);
+  const grandTotal = G3.reduce((a,g)=>a+totalFor(g.id),0);
+  const anyAssigned = grandTotal>0;
+  const groupQ = Object.fromEntries(G3.map(g=>[g.id, totalFor(g.id)]));
+  const groupMix = Object.fromEntries(G3.map(g=>[g.id, recipe[g.id]]));
 
   const byLvl = items.filter(q => lvlF==='all' || q.level===lvlF);
   const counts = { all:byLvl.length, chon:0, sapxep:0, noi:0 };
@@ -52,44 +72,62 @@ function ExerciseBody({levels}){
   const list = byLvl.filter(q=>tab==='all'||q.kind===tab);
 
   const toggleInc = id => setInc(s=>{const n=new Set(s);n.has(id)?n.delete(id):n.add(id);return n;});
-  const setG = (id,g) => setAssign(a=>({...a,[id]:g||undefined}));
-  const autoAssign = ()=> setAssign(Object.fromEntries(items.map(q=>[q.id, SUG_GROUP[q.level]])));
-  const clearAssign = ()=> setAssign({});
 
   // phân bổ mức độ
   const dist = ['Dễ','Trung bình','Khó'].map(l=>({l, n:items.filter(q=>q.level===l).length})).filter(d=>d.n>0);
-  // phân bổ giao nhóm
-  const gcount = {}; GROUPS.forEach(g=>gcount[g.id]=0); let unassigned=0;
-  items.forEach(q=>{ const a=assign[q.id]; if(a) gcount[a]++; else unassigned++; });
-  const anyAssigned = items.some(q=>assign[q.id]);
 
   return (
     <div>
-      <p className="sec-sub">AI đã tạo <b>{items.length} câu hỏi</b> ở {active.length} mức độ. Tích <b>“Đưa vào bài tập”</b> để dùng chung, và <b>“Giao cho”</b> để giao theo nhóm học sinh.</p>
+      <p className="sec-sub">AI đã tạo <b>{items.length} câu hỏi</b> ở {active.length} mức độ. Tích <b>“Đưa vào bài tập”</b> để dùng chung, và đặt <b>“công thức đề”</b> để giao theo nhóm học sinh.</p>
 
       <div className="lvl-dist">
         <span className="ld-label">Phân bổ mức độ:</span>
         {dist.map(d=>(<span className="ld-item" key={d.l}><LvlBadge level={d.l}/><b>{d.n}</b> câu</span>))}
       </div>
 
-      {/* Giao bài theo nhóm */}
-      <div className="assign-bar">
+      {/* Giao bài theo nhóm — nâng dần độ khó */}
+      <div className="basket-wrap">
         <div className="ab-head">
-          <div className="ab-title"><Icon name="users" size={16}/>Giao bài theo nhóm học sinh</div>
-          <div className="ab-actions">
-            {anyAssigned && <button className="btn btn-ghost ab-clear" onClick={clearAssign}>Bỏ giao tất cả</button>}
-            <button className="btn btn-primary ab-auto" onClick={autoAssign}><Icon name="target" size={14}/>Giao tự động theo mức độ</button>
-          </div>
+          <div className="ab-title"><Icon name="users" size={16}/>Giao bài theo nhóm — nâng dần độ khó</div>
+          <button className="btn ab-auto" onClick={()=>setRecipe(makeDefault())}><Icon name="target" size={14}/>Đề xuất lại</button>
         </div>
-        <div className="ab-chips">
-          {GROUPS.map(g=>(
-            <span className="ab-chip" key={g.id} style={{borderColor:g.bg}}>
-              <span className="ac-dot" style={{background:g.color}}></span>{g.name}
-              <b style={{color:g.color}}>{gcount[g.id]}</b>
-              {g.sug && <span className="ac-sug">gợi ý: {g.sug}</span>}
-            </span>
-          ))}
-          <span className="ab-chip muted-chip"><span className="ac-dot" style={{background:'#c4ccd6'}}></span>Chưa giao <b>{unassigned}</b></span>
+        <p className="basket-help">Mỗi nhóm nhận <b>chủ yếu câu đúng trình độ</b> và <b>thêm vài câu khó hơn một bậc</b> để thử thách. Bạn có thể chỉnh số câu mỗi mức cho từng nhóm.</p>
+        <div className="basket-grid">
+          {G3.map(g=>{
+            const total=totalFor(g.id); const picked=basketFor(g.id);
+            return (
+              <div className="basket-card" key={g.id} style={{borderTopColor:g.color}}>
+                <div className="bc-head">
+                  <span className="ac-dot" style={{background:g.color}}></span>
+                  <span className="bc-name">{g.name}</span>
+                  <span className="bc-focus" style={{color:g.color,background:g.bg}}>Trình độ {CORE[g.id]}</span>
+                </div>
+                <div className="bc-rows">
+                  {LV.filter(l=>avail[l]>0).map(l=>{
+                    const isCore=CORE[g.id]===l, isStretch=STRETCH[g.id]===l;
+                    return (
+                      <div className={'bc-row'+(isCore?' core':'')} key={l}>
+                        <LvlBadge level={l}/>
+                        {isCore && <span className="bc-tag">trọng tâm</span>}
+                        {isStretch && <span className="bc-tag stretch">thử thách</span>}
+                        <div className="bc-step"><NumStepper value={recipe[g.id][l]||0} min={0} max={avail[l]} onChange={v=>setRq(g.id,l,v)}/></div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="bc-foot">
+                  <span className="bc-total">Tổng <b>{total}</b> câu</span>
+                  {total>0 && <button className="bc-see" onClick={()=>setOpenG(o=>({...o,[g.id]:!o[g.id]}))}>{openG[g.id]?'Ẩn':'Xem'} câu</button>}
+                </div>
+                {openG[g.id] && (
+                  <div className="bc-list">
+                    {picked.map(q=><div className="bc-q" key={q.id}><LvlBadge level={q.level}/><span>{q.text}</span></div>)}
+                    {picked.length===0 && <div className="muted" style={{fontSize:12.5,padding:'6px 2px'}}>Chưa chọn câu nào.</div>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -110,10 +148,8 @@ function ExerciseBody({levels}){
       </div>
 
       <div className="q-list">
-        {list.map(q=>{
-          const g = assign[q.id];
-          return (
-            <div className={'q-card'+(inc.has(q.id)?' inc':'')+(g?' assigned':'')} key={q.id}>
+        {list.map(q=>(
+            <div className={'q-card'+(inc.has(q.id)?' inc':'')} key={q.id}>
               <div className="q-head">
                 <span className="q-num">{KIND_LABEL[q.kind]}</span>
                 <div className="q-text">{q.text}</div>
@@ -155,41 +191,24 @@ function ExerciseBody({levels}){
                 <div className="qf-inc" onClick={()=>toggleInc(q.id)}>
                   <Check on={inc.has(q.id)}/>Đưa vào bài tập luyện tập
                 </div>
-                <div className="qf-assign">
-                  <Icon name="send" size={14}/><span className="qf-lbl">Giao cho:</span>
-                  <div className="grp-select">
-                    <span className="gs-dot" style={{background:g?GROUP_BY_ID[g].color:'#c4ccd6'}}></span>
-                    <select value={g||''} onChange={e=>setG(q.id, e.target.value)}>
-                      <option value="">Chưa giao</option>
-                      {GROUPS.map(gr=>(
-                        <option key={gr.id} value={gr.id}>{gr.name}{gr.sug?` — gợi ý câu ${gr.sug}`:''}</option>
-                      ))}
-                    </select>
-                  </div>
-                  {!g && SUG_GROUP[q.level] && (
-                    <button className="sug-btn" onClick={()=>setG(q.id, SUG_GROUP[q.level])}>
-                      Gợi ý: {GROUP_BY_ID[SUG_GROUP[q.level]].name}
-                    </button>
-                  )}
-                </div>
               </div>
             </div>
-          );
-        })}
+        ))}
         {list.length===0 && <div className="empty-note">Không có câu hỏi nào ở mức đã lọc.</div>}
       </div>
 
       <div className="acc-actions">
         <button className="btn"><Icon name="refresh" size={15}/>Tạo thêm câu hỏi</button>
         <div style={{display:'flex',gap:10}}>
-          {anyAssigned && <button className="btn btn-assign" onClick={()=>setShowAssign(true)}><Icon name="send" size={15}/>Giao {items.filter(q=>assign[q.id]).length} câu cho học sinh</button>}
+          {anyAssigned && <button className="btn btn-assign" onClick={()=>setShowAssign(true)}><Icon name="send" size={15}/>Giao bài cho học sinh</button>}
           <button className="btn btn-primary"><Icon name="save" size={15}/>Lưu {inc.size} câu vào bài tập</button>
         </div>
       </div>
 
       {showAssign && <AssignModal
-        groupQ={gcount}
-        totalAssigned={items.filter(q=>assign[q.id]).length}
+        groupQ={groupQ}
+        groupMix={groupMix}
+        totalAssigned={grandTotal}
         onClose={()=>setShowAssign(false)}
         onDone={()=>setShowAssign(false)}/>}
     </div>

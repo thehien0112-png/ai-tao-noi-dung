@@ -4,33 +4,47 @@ const CLASSES = [
   { id:'2b', name:'Lớp 2B' },
   { id:'2c', name:'Lớp 2C' },
 ];
-// roster mẫu, mỗi HS thuộc 1 nhóm trình độ
+// sở thích — dùng để cá nhân hoá nội dung câu hỏi cho từng học sinh
+const INTERESTS = {
+  kl: { name:'Khủng long', hero:'bạn khủng long Rex',  color:'#15803d', bg:'#e8f7ee' },
+  bb: { name:'Búp bê',     hero:'bạn búp bê Mi',       color:'#db2777', bg:'#fce7f1' },
+  bd: { name:'Bóng đá',    hero:'cầu thủ nhí Bo',      color:'#2563eb', bg:'#e0edff' },
+  vt: { name:'Vũ trụ',     hero:'phi hành gia Tí',     color:'#7c3aed', bg:'#efe6ff' },
+  tc: { name:'Thú cưng',   hero:'chú cún Bông',        color:'#b45309', bg:'#fdf3e0' },
+  cc: { name:'Công chúa',  hero:'công chúa Mây',       color:'#c026d3', bg:'#fbe8fb' },
+};
+// roster mẫu, mỗi HS thuộc 1 nhóm trình độ + có 1 sở thích
 const ROSTER = {
   '2a': [
-    {id:'a1',name:'Nguyễn Bảo An',grp:'yeu'},   {id:'a2',name:'Trần Gia Bình',grp:'yeu'},
-    {id:'a3',name:'Lê Minh Châu',grp:'yeu'},     {id:'a4',name:'Phạm Hải Đăng',grp:'yeu'},
-    {id:'a5',name:'Vũ Khánh Hà',grp:'kha'},      {id:'a6',name:'Đỗ Gia Hân',grp:'kha'},
-    {id:'a7',name:'Bùi Tuấn Kiệt',grp:'kha'},    {id:'a8',name:'Hoàng Bảo Lâm',grp:'kha'},
-    {id:'a9',name:'Ngô Thảo My',grp:'kha'},      {id:'a10',name:'Dương Minh Quân',grp:'gioi'},
-    {id:'a11',name:'Đặng Yến Nhi',grp:'gioi'},   {id:'a12',name:'Lý Gia Huy',grp:'gioi'},
+    {id:'a1',name:'Nguyễn Bảo An',grp:'yeu',int:'kl'},  {id:'a2',name:'Trần Gia Bình',grp:'yeu',int:'bd'},
+    {id:'a3',name:'Lê Minh Châu',grp:'yeu',int:'bb'},    {id:'a4',name:'Phạm Hải Đăng',grp:'yeu',int:'vt'},
+    {id:'a5',name:'Vũ Khánh Hà',grp:'kha',int:'cc'},     {id:'a6',name:'Đỗ Gia Hân',grp:'kha',int:'bb'},
+    {id:'a7',name:'Bùi Tuấn Kiệt',grp:'kha',int:'bd'},   {id:'a8',name:'Hoàng Bảo Lâm',grp:'kha',int:'kl'},
+    {id:'a9',name:'Ngô Thảo My',grp:'kha',int:'tc'},     {id:'a10',name:'Dương Minh Quân',grp:'gioi',int:'vt'},
+    {id:'a11',name:'Đặng Yến Nhi',grp:'gioi',int:'cc'},  {id:'a12',name:'Lý Gia Huy',grp:'gioi',int:'bd'},
   ],
   '2b': [
-    {id:'b1',name:'Trịnh Bảo Long',grp:'yeu'},   {id:'b2',name:'Mai Phương Linh',grp:'yeu'},
-    {id:'b3',name:'Tạ Đức Anh',grp:'kha'},        {id:'b4',name:'Cao Thuỳ Dương',grp:'kha'},
-    {id:'b5',name:'Phan Nhật Nam',grp:'kha'},     {id:'b6',name:'Hồ Khánh Vy',grp:'gioi'},
-    {id:'b7',name:'Lâm Tuệ Nhi',grp:'gioi'},      {id:'b8',name:'Võ Minh Khôi',grp:'gioi'},
+    {id:'b1',name:'Trịnh Bảo Long',grp:'yeu',int:'kl'},  {id:'b2',name:'Mai Phương Linh',grp:'yeu',int:'bb'},
+    {id:'b3',name:'Tạ Đức Anh',grp:'kha',int:'bd'},       {id:'b4',name:'Cao Thuỳ Dương',grp:'kha',int:'cc'},
+    {id:'b5',name:'Phan Nhật Nam',grp:'kha',int:'vt'},    {id:'b6',name:'Hồ Khánh Vy',grp:'gioi',int:'tc'},
+    {id:'b7',name:'Lâm Tuệ Nhi',grp:'gioi',int:'bb'},     {id:'b8',name:'Võ Minh Khôi',grp:'gioi',int:'kl'},
   ],
   '2c': [
-    {id:'c1',name:'Đoàn Bảo Ngọc',grp:'yeu'},     {id:'c2',name:'Tô Gia Bảo',grp:'yeu'},
-    {id:'c3',name:'Hà Minh Thư',grp:'kha'},        {id:'c4',name:'Chu Đức Duy',grp:'kha'},
-    {id:'c5',name:'Lương Hà Vi',grp:'gioi'},       {id:'c6',name:'Nguyễn Tuấn Anh',grp:'gioi'},
+    {id:'c1',name:'Đoàn Bảo Ngọc',grp:'yeu',int:'cc'},    {id:'c2',name:'Tô Gia Bảo',grp:'yeu',int:'bd'},
+    {id:'c3',name:'Hà Minh Thư',grp:'kha',int:'bb'},       {id:'c4',name:'Chu Đức Duy',grp:'kha',int:'vt'},
+    {id:'c5',name:'Lương Hà Vi',grp:'gioi',int:'tc'},      {id:'c6',name:'Nguyễn Tuấn Anh',grp:'gioi',int:'kl'},
   ],
 };
 const GRP_ORDER = ['yeu','kha','gioi'];
+window.INTERESTS = INTERESTS; window.ROSTER = ROSTER; window.CLASSES = CLASSES;
 
-function AssignModal({groupQ, totalAssigned, title, onClose, onDone}){
+function AssignModal({groupQ, groupMix, totalAssigned, title, onClose, onDone}){
   const GROUP_BY_ID = window.GROUP_BY_ID;
   const qTotal = GRP_ORDER.reduce((a,g)=>a+(groupQ[g]||0),0)+(groupQ.lop||0);
+  const mixStr = g => {
+    const m = groupMix && groupMix[g]; if(!m) return '';
+    return ['Dễ','Trung bình','Khó'].filter(l=>m[l]>0).map(l=>`${l==='Trung bình'?'TB':l} ×${m[l]}`).join(' · ');
+  };
   const [cls, setCls] = React.useState('2a');
   const [picked, setPicked] = React.useState(()=> new Set(ROSTER['2a'].map(s=>s.id)));
   const [date, setDate] = React.useState('2026-06-16');
@@ -75,14 +89,13 @@ function AssignModal({groupQ, totalAssigned, title, onClose, onDone}){
           {/* tóm tắt câu hỏi theo nhóm */}
           <div className="as-summary">
             {qTotal>0 ? (<>
-              <div className="as-sum-label">Câu hỏi sẽ giao theo nhóm trình độ:</div>
+              <div className="as-sum-label">Mỗi nhóm nhận một đề riêng — chủ yếu câu đúng trình độ, thêm vài câu khó hơn một bậc:</div>
               <div className="as-sum-chips">
                 {GRP_ORDER.map(g=>(
                   <span className="as-sum-chip" key={g} style={{background:GROUP_BY_ID[g].bg,color:GROUP_BY_ID[g].color}}>
-                    {GROUP_BY_ID[g].name}: <b>{groupQ[g]||0}</b> câu
+                    {GROUP_BY_ID[g].name}: <b>{groupQ[g]||0}</b> câu{mixStr(g)?<span className="sum-mix"> ({mixStr(g)})</span>:''}
                   </span>
                 ))}
-                {groupQ.lop>0 && <span className="as-sum-chip" style={{background:GROUP_BY_ID.lop.bg,color:GROUP_BY_ID.lop.color}}>Cả lớp: <b>{groupQ.lop}</b> câu</span>}
               </div>
             </>) : (
               <div className="as-sum-label" style={{margin:0,display:'flex',alignItems:'center',gap:8}}>
@@ -120,7 +133,7 @@ function AssignModal({groupQ, totalAssigned, title, onClose, onDone}){
                       <Check on={onCnt===studs.length} indet={onCnt>0&&onCnt<studs.length}/>
                       <span className="ac-dot" style={{background:gi.color}}></span>
                       <span className="gc-name">{gi.name}</span>
-                      <span className="gc-q" style={{color:gi.color,background:gi.bg}}>nhận {groupQ[g]||0} câu · {gi.sug}</span>
+                      <span className="gc-q" style={{color:gi.color,background:gi.bg}}>nhận {groupQ[g]||0} câu{mixStr(g)?` · ${mixStr(g)}`:''}</span>
                     </div>
                     <div className="gc-students">
                       {studs.map(s=>(

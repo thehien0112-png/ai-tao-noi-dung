@@ -379,6 +379,45 @@ select.ctrl{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmln
 .mix-chip{font-size:12px;font-weight:700;padding:3px 11px;border-radius:20px}
 .q-card .q-kind{font-size:11px;font-weight:700;color:var(--blue-700);background:var(--blue-50);border-radius:6px;padding:3px 9px;flex:none}
 
+/* ===== V3: tạo lại / sửa câu hỏi ===== */
+.bai-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.btn-regenall{background:#f0ecfe;color:#6d28d9;border:1px solid #e0d5fb;font-weight:700}
+.btn-regenall:hover:not(:disabled){background:#e7defc}
+.regen-hint{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);margin:10px 0 2px}
+.regen-hint b{color:var(--ink-soft)}
+.q-list.dimmed{opacity:.5;pointer-events:none;transition:opacity .2s}
+.q-card{position:relative}
+.q-card.regenning{opacity:.65}
+.q-card.just-regen{animation:flashCard 1.4s ease}
+@keyframes flashCard{0%{box-shadow:0 0 0 2px #c4b5fd;background:#faf7ff}60%{box-shadow:0 0 0 2px #ddd6fe;background:#fdfcff}100%{box-shadow:none;background:#fff}}
+.q-mini.regen{color:#6d28d9;border-color:#e0d5fb}
+.q-mini.regen:hover:not(:disabled){background:#f3eefe}
+.q-mini:disabled{opacity:.5;cursor:not-allowed}
+.q-regen-overlay{position:absolute;inset:0;background:rgba(255,255,255,.78);display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;color:#6d28d9;font-size:13.5px;border-radius:11px;backdrop-filter:blur(1px);z-index:3}
+.q-edit-field{flex:1;border:1.5px solid var(--blue);border-radius:8px;padding:8px 11px;font-family:inherit;font-size:14.5px;font-weight:600;line-height:1.45;resize:vertical;outline:none;background:#fbfdff}
+.edit-hint{font-size:12px;color:var(--muted);margin:2px 0 9px;font-style:italic}
+.q-opt-edit{display:flex;align-items:center;gap:10px;margin-top:8px}
+.q-opt-edit .oi.pick{cursor:pointer;border:1.5px solid var(--line-2);background:#fff;transition:.12s}
+.q-opt-edit .oi.pick:hover{border-color:var(--ok)}
+.q-opt-edit .oi.pick.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt-input{flex:1;border:1.5px solid var(--line-2);border-radius:8px;padding:9px 12px;font-family:inherit;font-size:14px;outline:none}
+.opt-input:focus{border-color:var(--blue)}
+.si-edit{display:flex;align-items:center;gap:10px;margin-top:8px}
+.q-match-edit{display:flex;flex-direction:column;gap:10px;padding-top:4px}
+.pair-edit{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;color:var(--blue)}
+.q-edit-actions{display:flex;justify-content:flex-end;gap:10px;padding:12px 0 2px;margin-top:6px;border-top:1px dashed var(--line)}
+
+/* ===== V3: Bài tập giao học sinh — bản đồ nhóm ===== */
+.giao-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0 4px}
+.giao-card{border:1.5px solid var(--line);border-radius:12px;padding:16px;text-align:center;background:#fff;display:flex;flex-direction:column;align-items:center;gap:9px}
+.gc-grp{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px}
+.gc-grp-ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none}
+.gc-arrow{color:var(--muted-2)}
+.gc-bai{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px;padding:7px 14px;border-radius:20px}
+.gc-stat{font-size:13px;color:var(--muted)}
+.gc-stat b{color:var(--ink)}
+@media(max-width:760px){.giao-grid{grid-template-columns:1fr}}
+
 /* document / passage */
 .ver-wrap{margin:0 0 14px}
 .ver-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}

@@ -5,7 +5,8 @@ const RTYPES = [
   { id:'baidoc',  name:'Bài đọc',  unit:'bài đọc',  icon:'reader',     color:'#2563eb' },
   { id:'sachnoi', name:'Sách nói', unit:'sách nói', icon:'headphones', color:'#7c3aed' },
   { id:'video',   name:'Video',    unit:'video',    icon:'video',      color:'#ea580c' },
-  { id:'baitap',  name:'Bài tập luyện tập', unit:'bài tập', icon:'puzzle', color:'#16a34a' },
+  { id:'baitap',  name:'Bài luyện tập chung', unit:'bài tập', icon:'puzzle', color:'#16a34a' },
+  { id:'baigiao', name:'Bài tập giao học sinh', unit:'bài giao', icon:'send', color:'#0284c7' },
 ];
 
 // mỗi bài = 10 câu hỏi với tỉ lệ độ khó cố định
@@ -15,6 +16,9 @@ const BAI_DEFS = [
   { level:'Khó',        name:'Bài khó',        mix:{'Dễ':1,'Trung bình':4,'Khó':5} },
 ];
 const BAI_BY_LEVEL = Object.fromEntries(BAI_DEFS.map(b=>[b.level,b]));
+// bài tập chung cho cả lớp: 10 câu cố định 3 Dễ / 4 TB / 3 Khó
+const CHUNG_MIX = {'Dễ':3,'Trung bình':4,'Khó':3};
+const SUG_NHOM = {'Dễ':'Nhóm yếu','Trung bình':'Nhóm khá','Khó':'Nhóm giỏi'};
 const mixStr = mix => `${mix['Dễ']} Dễ · ${mix['Trung bình']} TB · ${mix['Khó']} Khó`;
 
 function TopNav(){
@@ -38,7 +42,8 @@ const summaryDesc = {
   baidoc:'Một bài đọc chung do AI tạo',
   sachnoi:'Một bản thu âm thanh chung',
   video:'Một video bài giảng chung',
-  baitap:'Mỗi bài tập 10 câu hỏi luyện tập',
+  baitap:'10 câu hỏi dùng chung cho cả lớp',
+  baigiao:'Bài theo mức độ, giao cho từng nhóm học sinh',
 };
 
 function Sec({id, index, title, open, locked, status, summary, onHeader, children}){
@@ -96,18 +101,71 @@ function buildBaiQuestions(mix){
   return out;
 }
 const KIND_LABEL = { chon:'Chọn', sapxep:'Sắp xếp', noi:'Nối' };
-function QCard({q, n}){
+
+// ngân hàng biến thể để "Tạo lại bằng AI" cho từng câu hỏi
+const REGEN_BANK = {
+  chon:[
+    {text:'Khi đến trường trong ngày tựu trường, bạn nhỏ có cảm xúc gì?',
+      options:[{t:'Lo lắng, sợ sệt'},{t:'Tự hào vì mình đã lớn',correct:true},{t:'Chán nản, mệt mỏi'},{t:'Buồn ngủ'}]},
+    {text:'Câu nào nói đúng nhất về tâm trạng của bạn nhỏ?',
+      options:[{t:'Bạn thấy mình nhỏ bé'},{t:'Bạn thấy mình đã lớn hơn',correct:true},{t:'Bạn thấy lạ lẫm'},{t:'Bạn thấy chán'}]},
+    {text:'Vì sao bạn nhỏ muốn đến trường thật sớm?',
+      options:[{t:'Vì háo hức, mong được đi học',correct:true},{t:'Vì sợ đi muộn bị phạt'},{t:'Vì mẹ bắt buộc'},{t:'Vì trời nắng đẹp'}]},
+  ],
+  sapxep:[
+    {seq:['Mẹ gọi, bạn nhỏ vùng dậy và chuẩn bị thật nhanh.','Bạn nhỏ chào mẹ rồi chạy vào sân trường.','Bạn nhỏ gặp các bạn đang ríu rít trò chuyện.']},
+    {seq:['Buổi sáng tựu trường bắt đầu.','Bạn nhỏ đến trường thật sớm.','Bạn nhỏ thấy mình đã lớn hơn các em lớp 1.']},
+  ],
+  noi:[
+    {pairs:[['tựu trường','ngày đầu đến lớp'],['ríu rít','nói chuyện vui vẻ, liền nhau'],['tự hào','hãnh diện về bản thân']]},
+    {pairs:[['rụt rè','e dè, chưa mạnh dạn'],['vùng dậy','bật dậy thật nhanh'],['ào vào','chạy vào thật nhanh']]},
+  ],
+};
+
+function QCard({q, n, onDelete}){
+  const [cur, setCur] = React.useState(q);
+  const [mode, setMode] = React.useState('view');   // view | edit
+  const [regen, setRegen] = React.useState(false);
+  const [flash, setFlash] = React.useState(false);
+  const [draft, setDraft] = React.useState(null);
+  const variantRef = React.useRef(0);
+
+  const doRegen = ()=>{
+    setRegen(true);
+    setTimeout(()=>{
+      const bank = REGEN_BANK[cur.kind] || [];
+      variantRef.current = (variantRef.current+1) % (bank.length||1);
+      const v = bank[variantRef.current] || {};
+      setCur(c=>({...c, ...v}));
+      setRegen(false); setFlash(true); setTimeout(()=>setFlash(false),1400);
+    }, 950);
+  };
+  const startEdit = ()=>{ setDraft(JSON.parse(JSON.stringify(cur))); setMode('edit'); };
+  const saveEdit = ()=>{ setCur(draft); setMode('view'); setFlash(true); setTimeout(()=>setFlash(false),1200); };
+
   return (
-    <div className="q-card inc">
+    <div className={'q-card inc'+(flash?' just-regen':'')+(regen?' regenning':'')}>
       <div className="q-head">
         <span className="q-num">{n}</span>
-        <span className="q-kind">{KIND_LABEL[q.kind]}</span>
-        <div className="q-text">{q.text}</div>
-        <LvlBadge level={q.level}/>
+        <span className="q-kind">{KIND_LABEL[cur.kind]}</span>
+        {mode==='view'
+          ? <div className="q-text">{cur.text}</div>
+          : <textarea className="q-edit-field" rows={2} value={draft.text}
+              onChange={e=>setDraft({...draft, text:e.target.value})}/>}
+        <LvlBadge level={cur.level}/>
+        {mode==='view' && (
+          <div className="q-acts">
+            <button className="q-mini edit" onClick={startEdit}><Icon name="edit" size={13}/>Sửa</button>
+            <button className="q-mini regen" onClick={doRegen} disabled={regen}><Icon name="sparkles" size={13} fill/>Tạo lại</button>
+            {onDelete && <button className="q-mini del" onClick={onDelete}><Icon name="trash" size={13}/></button>}
+          </div>
+        )}
       </div>
-      {q.kind==='chon' && (
+
+      {/* ---- view ---- */}
+      {mode==='view' && cur.kind==='chon' && (
         <div className="q-opts">
-          {q.options.map((o,i)=>(
+          {cur.options.map((o,i)=>(
             <div className={'q-opt'+(o.correct?' correct':'')} key={i}>
               <span className="oi">{String.fromCharCode(65+i)}</span>{o.t}
               {o.correct && <span className="ans-mark"><Icon name="check" size={13} stroke={3}/>Đáp án</span>}
@@ -115,29 +173,99 @@ function QCard({q, n}){
           ))}
         </div>
       )}
-      {q.kind==='sapxep' && (
-        <div className="q-seq">{q.seq.map((s,i)=><div className="si" key={i}><span className="ord">{i+1}</span>{s}</div>)}</div>
+      {mode==='view' && cur.kind==='sapxep' && (
+        <div className="q-seq">{cur.seq.map((s,i)=><div className="si" key={i}><span className="ord">{i+1}</span>{s}</div>)}</div>
       )}
-      {q.kind==='noi' && (
-        <div className="q-match">{q.pairs.map((p,i)=>(
+      {mode==='view' && cur.kind==='noi' && (
+        <div className="q-match">{cur.pairs.map((p,i)=>(
           <React.Fragment key={i}><div className="mcell">{p[0]}</div><div className="mline"><Icon name="link2" size={16}/></div><div className="mcell">{p[1]}</div></React.Fragment>
         ))}</div>
       )}
+
+      {/* ---- edit ---- */}
+      {mode==='edit' && draft.kind==='chon' && (
+        <div className="q-opts">
+          <div className="edit-hint">Sửa nội dung đáp án, bấm vào ô tròn để chọn đáp án đúng.</div>
+          {draft.options.map((o,i)=>(
+            <div className={'q-opt-edit'+(o.correct?' correct':'')} key={i}>
+              <button className={'oi pick'+(o.correct?' on':'')} title="Đặt làm đáp án đúng"
+                onClick={()=>setDraft({...draft, options:draft.options.map((x,j)=>({...x,correct:j===i}))})}>
+                {o.correct ? <Icon name="check" size={12} stroke={3}/> : String.fromCharCode(65+i)}
+              </button>
+              <input className="opt-input" value={o.t}
+                onChange={e=>setDraft({...draft, options:draft.options.map((x,j)=>j===i?{...x,t:e.target.value}:x)})}/>
+            </div>
+          ))}
+        </div>
+      )}
+      {mode==='edit' && draft.kind==='sapxep' && (
+        <div className="q-seq">
+          <div className="edit-hint">Sửa nội dung từng bước. Thứ tự hiện tại là đáp án đúng.</div>
+          {draft.seq.map((s,i)=>(
+            <div className="si-edit" key={i}><span className="ord">{i+1}</span>
+              <input className="opt-input" value={s}
+                onChange={e=>setDraft({...draft, seq:draft.seq.map((x,j)=>j===i?e.target.value:x)})}/>
+            </div>
+          ))}
+        </div>
+      )}
+      {mode==='edit' && draft.kind==='noi' && (
+        <div className="q-match-edit">
+          <div className="edit-hint">Sửa cặp từ ở cột A và nghĩa tương ứng ở cột B.</div>
+          {draft.pairs.map((p,i)=>(
+            <div className="pair-edit" key={i}>
+              <input className="opt-input" value={p[0]}
+                onChange={e=>setDraft({...draft, pairs:draft.pairs.map((x,j)=>j===i?[e.target.value,x[1]]:x)})}/>
+              <Icon name="link2" size={15}/>
+              <input className="opt-input" value={p[1]}
+                onChange={e=>setDraft({...draft, pairs:draft.pairs.map((x,j)=>j===i?[x[0],e.target.value]:x)})}/>
+            </div>
+          ))}
+        </div>
+      )}
+      {mode==='edit' && (
+        <div className="q-edit-actions">
+          <button className="btn btn-ghost" onClick={()=>setMode('view')}>Huỷ</button>
+          <button className="btn btn-primary" onClick={saveEdit}><Icon name="check" size={14} stroke={3}/>Lưu câu hỏi</button>
+        </div>
+      )}
+
+      {regen && <div className="q-regen-overlay"><span className="spin"/>Đang tạo lại câu hỏi…</div>}
     </div>
   );
 }
+
 function ExerciseBaiBody({bai}){
-  const qs = useMemo(()=>buildBaiQuestions(bai.mix),[bai]);
+  const [salt, setSalt] = React.useState(0);
+  const [qs, setQs] = React.useState(()=>buildBaiQuestions(bai.mix));
+  const [regenAll, setRegenAll] = React.useState(false);
+
+  const doRegenAll = ()=>{
+    setRegenAll(true);
+    setTimeout(()=>{
+      setSalt(s=>s+1);
+      setQs(buildBaiQuestions(bai.mix));
+      setRegenAll(false);
+    }, 1300);
+  };
+  const delQ = uid => setQs(list=>list.filter(q=>q.uid!==uid));
+
   return (
     <div>
-      <div className="bai-mixline">
-        <span className="muted">10 câu hỏi:</span>
-        <span className="mix-chip" style={{background:'#e8f7ee',color:'#15803d'}}>{bai.mix['Dễ']} Dễ</span>
-        <span className="mix-chip" style={{background:'#fdf3e0',color:'#b45309'}}>{bai.mix['Trung bình']} TB</span>
-        <span className="mix-chip" style={{background:'#fde8e6',color:'#c2410c'}}>{bai.mix['Khó']} Khó</span>
+      <div className="bai-toolbar">
+        <div className="bai-mixline">
+          <span className="muted">{qs.length} câu hỏi:</span>
+          <span className="mix-chip" style={{background:'#e8f7ee',color:'#15803d'}}>{bai.mix['Dễ']} Dễ</span>
+          <span className="mix-chip" style={{background:'#fdf3e0',color:'#b45309'}}>{bai.mix['Trung bình']} TB</span>
+          <span className="mix-chip" style={{background:'#fde8e6',color:'#c2410c'}}>{bai.mix['Khó']} Khó</span>
+        </div>
+        <button className="btn btn-regenall" onClick={doRegenAll} disabled={regenAll}>
+          {regenAll ? <><span className="spin"/>Đang tạo lại…</> : <><Icon name="sparkles" size={14} fill/>Tạo lại cả bài</>}
+        </button>
       </div>
-      <div className="q-list" style={{marginTop:12}}>
-        {qs.map((q,i)=><QCard key={q.uid} q={q} n={i+1}/>)}
+      <p className="regen-hint"><Icon name="info" size={14}/>Chưa ưng câu nào? Bấm <b>Tạo lại</b> để AI sinh lại riêng câu đó, hoặc <b>Sửa</b> để chỉnh tay.</p>
+      <div className={'q-list'+(regenAll?' dimmed':'')} style={{marginTop:6}}>
+        {qs.map((q,i)=><QCard key={q.uid+'-'+salt} q={q} n={i+1} onDelete={()=>delQ(q.uid)}/>)}
       </div>
     </div>
   );
@@ -187,7 +315,7 @@ function GenericGenerating({label, pct, sub, onCancel, accent}){
 }
 
 function App(){
-  const [types, setTypes] = useState(new Set(['baidoc','sachnoi','video','baitap']));
+  const [types, setTypes] = useState(new Set(['baidoc','sachnoi','video','baitap','baigiao']));
   const [content, setContent] = useState('Bài đọc "Tôi là học sinh lớp 2" — kể về cảm xúc của bạn nhỏ trong ngày tựu trường đầu tiên của lớp 2.');
   const [cfg, setCfg] = useState({ grade:'Lớp 2', subject:'Tiếng Việt', voice:'Nova (Nữ trẻ)', vstyle:'Hoạt hình minh hoạ' });
   const [counts, setCounts] = useState({ 'Dễ':2, 'Trung bình':1, 'Khó':1 });
@@ -241,6 +369,7 @@ function App(){
     setStatus(init); setPhase('ready'); setOpen(orderedResults[0]?.id||'setup');
     if(types.has('baidoc')) setTimeout(()=>setStatus(s=>({...s,baidoc:'done'})),1500);
     if(types.has('baitap')) setTimeout(()=>setStatus(s=>({...s,baitap:'done'})),2300);
+    if(types.has('baigiao')) setTimeout(()=>setStatus(s=>({...s,baigiao:'done'})),2600);
     if(types.has('sachnoi')) runAudio();
     if(types.has('video')) runVideo();
   };
@@ -252,7 +381,8 @@ function App(){
     baidoc:`1 bài đọc chung`,
     sachnoi:`1 sách nói · giọng ${cfg.voice.split(' (')[0]}`,
     video:`1 video · ${cfg.vstyle}`,
-    baitap:`${totalBai} bài tập · ${totalCau} câu hỏi`,
+    baitap:`10 câu chung cho cả lớp · 3 Dễ · 4 TB · 3 Khó`,
+    baigiao:`${totalBai} bài giao theo 3 nhóm học sinh`,
   };
   const audioBusy = status.sachnoi==='generating';
   const videoBusy = status.video==='generating';
@@ -373,23 +503,50 @@ function App(){
                 return <div><p className="sec-sub">Đã huỷ tạo {t.unit}. Các phần khác không bị ảnh hưởng.</p>
                   <button className="btn btn-primary" onClick={retry}><Icon name="refresh" size={15}/>Tạo lại {t.unit}</button></div>;
               }
-              // done — Bài đọc/Sách nói/Video: một bản chung; Bài tập: theo bài
+              // done — Bài đọc/Sách nói/Video: một bản chung
               if(t.id==='baidoc') return <ReadingBody/>;
               if(t.id==='sachnoi') return <AudioBody/>;
               if(t.id==='video') return <VideoBody style={cfg.vstyle}/>;
+              // Bài tập luyện tập chung — 1 bộ 10 câu (3 Dễ · 4 TB · 3 Khó) cho cả lớp
+              if(t.id==='baitap') return (
+                <div>
+                  <p className="sec-sub">Một bộ <b>10 câu hỏi</b> (3 Dễ · 4 TB · 3 Khó) dùng chung cho <b>cả lớp</b>. Bạn có thể sửa hoặc tạo lại từng câu / cả bài bằng AI.</p>
+                  <ExerciseBaiBody bai={{level:'Chung', mix:CHUNG_MIX}}/>
+                </div>
+              );
+              // Bài tập giao học sinh — bài theo mức độ, phân về từng nhóm
+              const giaoMap = [
+                {grp:'Nhóm yếu',  level:'Dễ',         baiName:'Bài dễ',         n:counts['Dễ']||0},
+                {grp:'Nhóm khá',  level:'Trung bình', baiName:'Bài trung bình', n:counts['Trung bình']||0},
+                {grp:'Nhóm giỏi', level:'Khó',        baiName:'Bài khó',        n:counts['Khó']||0},
+              ];
               return (
                 <div>
+                  <p className="sec-sub">Các bài tập tạo theo mức độ, giao cho từng nhóm học sinh phù hợp. Mỗi bài 10 câu, có thể sửa / tạo lại bằng AI trước khi giao.</p>
                   <div className="map-note">
                     <Icon name="info" size={15}/>
-                    <span>Giao tự động theo mức độ của bài:</span>
+                    <span>Tự động giao theo mức độ của bài:</span>
                     <span className="map-pair"><LvlBadge level="Dễ"/><Icon name="chevRight" size={13}/><b>Nhóm yếu</b></span>
                     <span className="map-pair"><LvlBadge level="Trung bình"/><Icon name="chevRight" size={13}/><b>Nhóm khá</b></span>
                     <span className="map-pair"><LvlBadge level="Khó"/><Icon name="chevRight" size={13}/><b>Nhóm giỏi</b></span>
                   </div>
-                  <BaiList bais={bais} color={t.color} unitLabel="Bài tập"
-                    sub={b=>`10 câu · ${mixStr(b.mix)}`} renderBody={b=> <ExerciseBaiBody bai={b}/>}/>
+                  <div className="giao-grid">
+                    {giaoMap.map(g=>{
+                      const s = LEVEL_STYLE[g.level];
+                      return (
+                        <div className="giao-card" key={g.grp} style={{borderColor:s.bg}}>
+                          <div className="gc-grp"><span className="gc-grp-ic" style={{background:s.bg,color:s.color}}><Icon name="users" size={16}/></span>{g.grp}</div>
+                          <div className="gc-arrow"><Icon name="chevDown" size={16}/></div>
+                          <div className="gc-bai" style={{background:s.bg,color:s.color}}><LvlBadge level={g.level}/>{g.baiName}</div>
+                          <div className="gc-stat"><b>{g.n}</b> bài · <b>{g.n*10}</b> câu</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <BaiList bais={bais} color={t.color} unitLabel="Bài"
+                    sub={b=>`10 câu · ${mixStr(b.mix)} · giao ${SUG_NHOM[b.level]}`} renderBody={b=> <ExerciseBaiBody bai={b}/>}/>
                   <div className="acc-actions">
-                    <span className="foot-info"><b>{totalBai}</b> bài tập · <b>{totalCau}</b> câu hỏi</span>
+                    <span className="foot-info"><b>{totalBai}</b> bài giao cho <b>3</b> nhóm học sinh</span>
                     <button className="btn btn-assign" onClick={()=>setShowAssign(true)}><Icon name="send" size={15}/>Giao bài cho học sinh</button>
                   </div>
                 </div>

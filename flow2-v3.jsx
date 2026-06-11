@@ -27,7 +27,7 @@ function TopNav(){
       <div className="brand">Tool editor</div>
       <nav className="nav-links">
         <a href="#"><Icon name="sparkles" size={14} fill/>Tạo nội dung</a>
-        <a href="Thư viện.html"><Icon name="folder" size={14}/>Thư viện</a>
+        {!window.MOUNT_EXTERNAL && <a href="Thư viện.html"><Icon name="folder" size={14}/>Thư viện</a>}
         <a href="#">Sự kiện</a>
         <a href="#">Cài đặt tài khoản</a>
       </nav>
@@ -314,7 +314,7 @@ function GenericGenerating({label, pct, sub, onCancel, accent}){
   );
 }
 
-function App(){
+function App({onBack, onSaved, embedded, lessonName}){
   const [types, setTypes] = useState(new Set(['baidoc','sachnoi','video','baitap','baigiao']));
   const [content, setContent] = useState('Bài đọc "Tôi là học sinh lớp 2" — kể về cảm xúc của bạn nhỏ trong ngày tựu trường đầu tiên của lớp 2.');
   const [cfg, setCfg] = useState({ grade:'Lớp 2', subject:'Tiếng Việt', voice:'Nova (Nữ trẻ)', vstyle:'Hoạt hình minh hoạ' });
@@ -374,7 +374,7 @@ function App(){
     if(types.has('video')) runVideo();
   };
   const cancel = (key,timer)=>{ clearInterval(timer.current); setStatus(s=>({...s,[key]:'cancelled'})); };
-  const saveAll = ()=>{ setToast('Đã lưu tất cả bài giảng'); setTimeout(()=>setToast(null),2400); };
+  const saveAll = ()=>{ setToast('Đã lưu tất cả bài giảng'); setTimeout(()=>setToast(null),2400); if(onSaved) onSaved({types:[...types], totalBai, totalCau, voice:cfg.voice, vstyle:cfg.vstyle}); };
 
   const setupSummary = `${cfg.subject} · ${cfg.grade} · ${totalBai} bài`;
   const resSummary = {
@@ -401,11 +401,13 @@ function App(){
       <TopNav/>
       <div className="page">
         <div className="flow-head">
-          <a href="Tạo bài giảng.html" className="flow-back"><Icon name="back" size={16}/>Quay lại</a>
+          {onBack
+            ? <button className="flow-back" onClick={onBack}><Icon name="back" size={16}/>Quay lại</button>
+            : <a href="Tạo bài giảng.html" className="flow-back"><Icon name="back" size={16}/>Quay lại</a>}
           <div className="flow-spacer"></div>
-          <a className="btn btn-primary" href="Thư viện.html"><Icon name="folder" size={16}/>Thư viện</a>
+          {!embedded && <a className="btn btn-primary" href="Thư viện.html"><Icon name="folder" size={16}/>Thư viện</a>}
         </div>
-        <h1 className="page-title" style={{marginBottom:18}}>Tạo nội dung bằng AI <span className="v2-tag">V3</span></h1>
+        <h1 className="page-title" style={{marginBottom:18}}>Tạo nội dung bằng AI{lessonName ? <span className="create-lesson"> — {lessonName}</span> : <span className="v2-tag">V3</span>}</h1>
 
         <div className="type-row">
           {RTYPES.map(t=>(
@@ -569,7 +571,7 @@ function App(){
                 : <>Đã tạo nội dung cho <b>“{LESSON.title}”</b> · <b>{totalBai}</b> bài tập</>}
             </span>
             <div style={{display:'flex',gap:10}}>
-              <a className="btn" href="Thư viện.html"><Icon name="folder" size={15}/>Thư viện</a>
+              {!embedded && <a className="btn" href="Thư viện.html"><Icon name="folder" size={15}/>Thư viện</a>}
               <button className="btn btn-primary btn-lg" onClick={saveAll}>
                 <Icon name="save" size={16}/>{(audioBusy||videoBusy)?'Lưu phần đã xong':'Lưu tất cả'}
               </button>
@@ -587,4 +589,7 @@ function App(){
 }
 function scaleMix(mix,n){ return {'Dễ':mix['Dễ']*n,'Trung bình':mix['Trung bình']*n,'Khó':mix['Khó']*n}; }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+Object.assign(window, { CreateContent: App });
+if(!window.MOUNT_EXTERNAL){
+  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+}

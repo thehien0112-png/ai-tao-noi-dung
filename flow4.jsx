@@ -65,7 +65,7 @@ function LessonList({lessons, onCreate, onOpen, onEdit}){
   const Cell = ({on, icon, type, onCreateClick, showCreate, onEdit})=>(
     <div className="cell-actions">
       {on
-        ? <button className="cellbtn done" onClick={()=>onEdit(type)}><Icon name="edit" size={14}/>Sửa <Icon name={icon} size={14}/></button>
+        ? <button className="cellbtn done" onClick={()=>onEdit(type)}><Icon name="edit" size={14}/>Sửa</button>
         : <button className="cellbtn add"><Icon name="plus" size={15}/><Icon name={icon} size={14}/></button>}
       {showCreate && <button className="cellbtn tao" onClick={onCreateClick}>Tạo</button>}
     </div>
@@ -102,7 +102,7 @@ function LessonList({lessons, onCreate, onOpen, onEdit}){
           <th style={{width:34}}><span onClick={()=>setSel(allOn?new Set():new Set(lessons.map(l=>l.id)))}><Check on={allOn}/></span></th>
           <th style={{width:48}}>STT</th>
           <th>Tên bài</th>
-          <th style={{width:170}}>Bài đọc</th>
+          <th style={{width:160}}>Bài đọc</th>
           <th style={{width:120}}>Video</th>
           <th style={{width:130}}>Từ khóa video</th>
           <th style={{width:120}}>Sách nói</th>

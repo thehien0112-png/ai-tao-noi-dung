@@ -429,18 +429,20 @@ select.ctrl{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmln
 .lesson-name{border:none;background:transparent;font-family:inherit;font-weight:700;font-size:14.5px;color:var(--ink);text-align:left;padding:0;cursor:pointer;line-height:1.4}
 .lesson-name:hover{color:var(--blue-600);text-decoration:underline}
 .lesson-q{color:var(--muted);font-weight:600}
-.cell-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.cellbtn{display:inline-flex;align-items:center;gap:5px;border:none;border-radius:7px;padding:7px 11px;font-size:13px;font-weight:700;font-family:inherit}
+.cell-actions{display:flex;align-items:center;gap:7px;flex-wrap:nowrap}
+.cellbtn{display:inline-flex;align-items:center;gap:5px;border:none;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;font-family:inherit;white-space:nowrap;transition:.12s}
 .cellbtn.done{background:var(--blue-600);color:#fff}
 .cellbtn.done:hover{background:var(--blue-700)}
-.cellbtn.add{background:#eceff3;color:#8a93a0}
+.cellbtn.add{background:#eceff3;color:#8a93a0;padding:8px 11px}
 .cellbtn.add:hover{background:#e3e7ec}
-.cellbtn.tao{background:var(--blue-600);color:#fff;padding:7px 14px}
+.cellbtn.tao{background:var(--blue-600);color:#fff;padding:8px 16px}
 .cellbtn.tao:hover{background:var(--blue-700)}
+.cellbtn.retao{background:#eef4ff;color:var(--blue-600);border:1px solid #d4e3fb;padding:8px 10px}
+.cellbtn.retao:hover{background:#e0ecff}
 .cellbtn.kw{background:#eceff3;color:#8a93a0}
-.cellbtn.sndone{background:var(--blue-600);color:#fff;padding:7px 16px}
+.cellbtn.sndone{background:var(--blue-600);color:#fff;padding:8px 17px}
 .cellbtn.sndone:hover{background:var(--blue-700)}
-.cellbtn.snoff{background:#eceff3;color:#8a93a0;padding:7px 16px}
+.cellbtn.snoff{background:#eceff3;color:#8a93a0;padding:8px 17px}
 .row-act{display:flex;gap:8px;justify-content:flex-end}
 
 /* ===== V4: Danh sách câu hỏi luyện tập ===== */

@@ -52,6 +52,9 @@ const ICONS = {
   calendar:'M8 2v4 M16 2v4 M3 10h18 M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z',
   clock2:'M12 22a10 10 0 100-20 10 10 0 000 20z M12 6v6l4 2',
   heart:'M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 00-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 000-7.8z',
+  chart:'M3 3v18h18 M8 17v-5 M13 17V8 M18 17v-9',
+  clipboard:'M9 4h6a1 1 0 011 1v1H8V5a1 1 0 011-1z M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-2 M9 13l2 2 4-4',
+  logout:'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4 M16 17l5-5-5-5 M21 12H9',
 };
 function Icon({name, size=20, stroke=2, fill=false, style, ...rest}){
   const d = ICONS[name] || '';
